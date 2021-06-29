@@ -8,7 +8,6 @@ const Duration = require("../models/duration");
 const {
   ValuesOfCorrectType,
 } = require("graphql/validation/rules/ValuesOfCorrectType");
-// const Location = require("../models/a");
 const findsim = (a, b) => {
   const dot = (v1, v2) =>
     v1.map((x, i) => v1[i] * v2[i]).reduce((m, n) => m + n);
@@ -69,7 +68,6 @@ module.exports = {
     let p = [];
     for (let i in selected) {
       a = await Location.findOne({ name: selected[i] });
-      // console.log(a["name"]);
       p.push(a);
     }
 
@@ -78,17 +76,14 @@ module.exports = {
   getduration: async function ({ selected }, req) {
     let dis = [];
     for (let i in selected) {
-      // console.log(selected[i], "s");
       s = [...selected];
       s.splice(i, 1);
       // console.log(s);
       for (let j in s) {
         a = await Duration.findOne({ from: selected[i], to: s[j] });
         dis.push(a);
-        // dis[selected[i]][selected[j]] = a["duration"];
       }
     }
-    // console.log(dis);
 
     return dis;
   },
@@ -131,7 +126,6 @@ module.exports = {
       return true;
     };
     for (let i in items) {
-      // console.log(items[i]);
       isnone(items[i]);
     }
     items = items.filter((i) => !isnone(i));
@@ -145,16 +139,42 @@ module.exports = {
 
     return items;
   },
-  createuser: async function ({ locations, name }, req) {
-    vectorarray = await getvector(locations);
-    // console.log(input.name);
+  createuser: async function ({ email, password }, req) {
+    console.log(email, password);
+
+    const hashedPw = await bcrypt.hash(password, 12);
+    console.log(hashedPw);
     const user = new User({
-      name: name,
-      locations: locations,
-      vector: createuservector(vectorarray),
+      email: email,
+      locations: [],
+      vector: [],
+      password: hashedPw,
     });
     const a = await user.save();
-    // a.getChanges((r) => console.log(r));
     return 10;
+  },
+  login: async function ({ email, password }) {
+    const user = await User.findOne({ email: email });
+    if (!user) {
+      const error = new Error("User not found.");
+      error.code = 401;
+      throw error;
+    }
+    const isEqual = await bcrypt.compare(password, user.password);
+    if (!isEqual) {
+      const error = new Error("Password is incorrect.");
+      error.code = 401;
+      throw error;
+    }
+    const token = jwt.sign(
+      {
+        userId: user._id.toString(),
+        email: user.email,
+      },
+      "test",
+      { expiresIn: "1h" }
+    );
+    console.log(token, user._id);
+    return { token: token, userId: user._id.toString() };
   },
 };

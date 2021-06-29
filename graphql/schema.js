@@ -48,15 +48,20 @@ module.exports = buildSchema(`
         duration:String
         distance:String
     }
-   
+    type AuthData {
+        token: String!
+        userId: String!
+    }
     type RootQuery {
         getsim(name:String,len:Int):[Location]
         getinfo(selected:[String]):[Location ]
         getallinfo:[Location]
         getduration(selected:[String]):[Distance]
+        login(email: String!, password: String!): AuthData!
+       
     }
     type Rootmutation{
-        createuser(locations:[String] ,name:String):Int
+        createuser(email:String password:String):Int
 
     }
 
