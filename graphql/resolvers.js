@@ -8,6 +8,7 @@ const Duration = require("../models/duration");
 const {
   ValuesOfCorrectType,
 } = require("graphql/validation/rules/ValuesOfCorrectType");
+const user = require("../models/user");
 const findsim = (a, b) => {
   const dot = (v1, v2) =>
     v1.map((x, i) => v1[i] * v2[i]).reduce((m, n) => m + n);
@@ -37,6 +38,7 @@ function sort_object(obj) {
   return sorted_obj;
 }
 const createuservector = (l) => {
+  console.log(l.length);
   v = [];
   for (let i = 0; i < 1200; i++) {
     let a = 0;
@@ -48,6 +50,7 @@ const createuservector = (l) => {
 
     v.push(a);
   }
+  console.log(v);
 
   return v;
 };
@@ -91,8 +94,8 @@ module.exports = {
     a = await Location.find();
     return a.map((i) => i["_doc"]);
   },
-  getsim: async function ({ name, len }, req) {
-    let v1 = await User.findOne({ name: name });
+  getsim: async function ({ email }) {
+    let v1 = await User.findOne({ email: email });
     locations = v1["locations"];
     v1 = v1["vector"];
     a = await Location.find();
@@ -133,17 +136,14 @@ module.exports = {
       return second[1] - first[1];
     });
 
-    items = items.slice(0, len);
+    items = items.slice(0, 30);
     r = {};
     items = items.map((i, j) => i[2]);
-
+    console.log(items);
     return items;
   },
   createuser: async function ({ email, password }, req) {
-    console.log(email, password);
-
     const hashedPw = await bcrypt.hash(password, 12);
-    console.log(hashedPw);
     const user = new User({
       email: email,
       locations: [],
@@ -174,7 +174,59 @@ module.exports = {
       "test",
       { expiresIn: "1h" }
     );
-    console.log(token, user._id);
+
     return { token: token, userId: user._id.toString() };
+  },
+  // addfav: async function ({ name, email }) {
+  //   let user = await User.findOne({ email: email });
+  //   let locations = user["locations"];
+  //   console.log(locations, "bf");
+  //   locations.push(name);
+  //   let vectorarray = await getvector(locations);
+
+  //   user.locations = locations;
+  //   user.vector = createuservector(vectorarray);
+  //   await user.save();
+  //   console.log(locations, "af");
+  //   return "done";
+  //   return locations;
+  // },
+  // removefav: async function ({ name, email }) {
+  //   let user = await User.findOne({ email: email });
+  //   let locations = user["locations"];
+  //   console.log(lotions, "bf");
+  //   locations = locations.filter((i) => i !== name);
+  //   let vectorarray = await getvector(locations);
+  //   user.locations = locations;
+  //   console.log(locations, "af");
+  //   user.vector = createuservector(vectorarray);
+  //   console.log(user.locations, "user");
+
+  //   await user.save();
+  //   return "done";
+  //   return { locations: locations };
+  // },
+  getuserinfo: async function ({ email }) {
+    let user = await User.findOne({ email: email });
+
+    return user;
+  },
+  updatefav: async function ({ favorite, email }) {
+    let user = await User.findOne({ email: email });
+    let vector;
+    if (favorite.length > 0) {
+      console.log("run");
+      let vectorarray = await getvector(favorite);
+      user.vector = createuservector(vectorarray);
+    } else {
+      user.vector = null;
+    }
+
+    user.locations = favorite;
+
+    await user.save();
+
+    return "done";
+    return { locations: locations };
   },
 };

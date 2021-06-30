@@ -14,7 +14,6 @@ const userSchema = new Schema({
   locations: [
     {
       type: String,
-      // ref: "location",
     },
   ],
   vector: [

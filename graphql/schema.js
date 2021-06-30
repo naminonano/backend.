@@ -52,18 +52,28 @@ module.exports = buildSchema(`
         token: String!
         userId: String!
     }
+    type User {
+        locations:[String]
+        vector:[Int]
+    }
     type RootQuery {
-        getsim(name:String,len:Int):[Location]
+        getsim(email:String):[Location]
         getinfo(selected:[String]):[Location ]
         getallinfo:[Location]
         getduration(selected:[String]):[Distance]
         login(email: String!, password: String!): AuthData!
+        getuserinfo(email:String):User
        
+    }
+    type locations {
+        locations :[String]
     }
     type Rootmutation{
         createuser(email:String password:String):Int
+        updatefav(email:String favorite:[String]):String
 
     }
+    
 
  
     schema {
